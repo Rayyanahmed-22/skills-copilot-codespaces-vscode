@@ -1,4 +1,4 @@
-# AI Multi-Website Research Prompt
+# AI Multi-Website Research 
 
 Use the prompt below to instruct an AI to gather and compare information from 4–5 websites.
 
