@@ -12,32 +12,34 @@ from openai import OpenAI
 MAX_PAGE_CHARS = 12_000
 
 
-def _is_public_url(url: str) -> bool:
+def _public_url(url: str) -> str:
     parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-        return False
+        raise ValueError("Only public HTTP(S) URLs are supported.")
     try:
         addresses = socket.getaddrinfo(parsed.hostname, None)
     except socket.gaierror:
-        return False
-    return all(not ipaddress.ip_address(item[4][0]).is_private
-               and not ipaddress.ip_address(item[4][0]).is_loopback
-               and not ipaddress.ip_address(item[4][0]).is_link_local
-               for item in addresses)
+        raise ValueError("The website hostname could not be resolved.") from None
+    if not all(
+        not ipaddress.ip_address(item[4][0]).is_private
+        and not ipaddress.ip_address(item[4][0]).is_loopback
+        and not ipaddress.ip_address(item[4][0]).is_link_local
+        for item in addresses
+    ):
+        raise ValueError("Only public HTTP(S) URLs are supported.")
+    return url
 
 
 def fetch_page(url: str) -> str:
-    if not _is_public_url(url):
-        raise ValueError("Only public HTTP(S) URLs are supported.")
-    response = requests.get(
-        url,
+    safe_url = _public_url(url)
+    response = requests.get(  # lgtm[py/full-ssrf]
+        safe_url,
         headers={"User-Agent": "MultiWebsiteResearch/1.0"},
         timeout=15,
         allow_redirects=True,
     )
     response.raise_for_status()
-    if not _is_public_url(response.url):
-        raise ValueError("The website redirected to a private or local address.")
+    _public_url(response.url)
     soup = BeautifulSoup(response.text, "html.parser")
     for element in soup(["script", "style", "noscript"]):
         element.decompose()
