@@ -1,4 +1,14 @@
-# AI Multi-Website Research 
+# AI Multi-Website Research
+
+## Run the app
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Enter four or five public website URLs, the task to perform, and comparison criteria.
+Provide an OpenAI API key in the sidebar or set `OPENAI_API_KEY` before starting.
 
 Use the prompt below to instruct an AI to gather and compare information from 4–5 websites.
 
